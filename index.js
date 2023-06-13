@@ -2,8 +2,12 @@ const express = require("express");
 const cors = require("cors");
 const ytdl = require("ytdl-core");
 const server = express();
+const fs = require("fs");
+const http = require("http");
+const ffmpeg = require("fluent-ffmpeg");
+
 const port = 4201;
-const fs= require('fs')
+
 
 server.get("/", (req, res) => {
   res.send("Checking for connectivity...");
@@ -25,21 +29,26 @@ server.get("/download/webm", async (req, res) => {
 
 server.get('/download/mp3', async(req, res)=>{
   try{
-
-    const webm = await fs.createReadStream('http://127.0.0.1:5500/BE/music/rosenrot.webm');
-    // console.log({webm})
+    const songURL = "http://localhost:4201/download/webm";
     
+    http.get(songURL, (stream) => {
+      const outStream = ffmpeg(stream)
+        .toFormat("mp3")
+        .on("error", (err) => {
+          console.log("An error occurred: " + err.message);
+        })
+        .on("progress", (progress) => {
+          console.log("Processing: " + progress.targetSize + " KB converted");
+        })
+        .on("end", () => {
+          console.log("Processing finished !");
+        }).pipe();
+        
+        res.header("Content-Disposition", 'attachment; filename="tiki.mp3"');
+        
+        outStream.pipe(res)
+    });
     
-    // webm.pipe(res)
-    // const A =  await ytdl(URL, {filter: "audioonly"});
-    //   console.log({B})
-    // webm.on('open', function () {
-    //   webm.pipe(res);
-    // });
-    
-    // webm.on('error', function(err) {
-    //   res.end(err);
-    // });
   }catch(e){
     console.log({e})
   }
@@ -51,5 +60,3 @@ server.listen(port, '0.0.0.0',() => {
   console.log(`Example server listening on port ${port}`);
 });
 
-
-// stream_lectura.pipe(stream_escritura);
