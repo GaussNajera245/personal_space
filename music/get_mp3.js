@@ -3,30 +3,16 @@ const ytdl = require("ytdl-core");
 
 const URL = "https://www.youtube.com/watch?v=WWTFfEnMCCc";
 
-// function downloadContent(valueURL){
 
-ytdl(URL, { filter: "audioonly", forma: "mp3" });
-// }
+(async () => {
+  try {
+    const info = await ytdl.getInfo(URL);
+    const stream = ytdl.filterFormats(info.formats, 'audioonly');
 
-// downloadContent(process.argv[2] || URL)
+    console.log({stream})
 
- 
-  ytdl.getInfo(URL, { quality: "highestaudio" }, function (err, info) {
-    const stream = ytdl.downloadFromInfo(info, {
-      quality: "highestaudio",
-    });
 
-    console.log("err", err);
-
-    ffmpeg(stream)
-      .audioBitrate(info.formats[0].audioBitrate)
-      .withAudioCodec("libmp3lame")
-      .toFormat("mp3")
-      .saveToFile(`./videoId.mp3`)
-      .on("error", function (err) {
-        console.log("error", err);
-      })
-      .on("end", function () {
-       console.log('end_____')
-      });
-  });
+  } catch (err) {
+    console.log('_____Error:', err)
+  }
+})();
