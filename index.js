@@ -27,49 +27,62 @@ server.get("/download/webm", async (req, res) => {
 
   const { videoDetails } = await ytdl.getBasicInfo(URL);
 
-  const title = (
-    videoDetails.title.replace("(Official Video)", "") || "default"
-  ).trim("");
-
+  let title =  videoDetails?.title || "default";
+  title= title.replace("(Official Video)", "");
+  title= title.replace("(Official Audio)", "");
+  title = title.trim();
+  
   res.header("Content-Disposition", `attachment; filename="${title}.mp3"`);
 
   ytdl(URL, { filter: "audioonly" }).pipe(res);
 });
 
-server.get("/download/mp3", async (req, res) => {
+server.get("/download/mp3", (req, res) => {
+  let cancelHeaders = false;
   try {
     const URL = req.query.URL;
 
     if (!URL) {
-      res.send("No video URL found");
+      res.status(500).send("No video URL found");
       return;
     }
+
     const songURL =
       req.protocol + "://" + req.get("host") + "/download/webm" + "?URL=" + URL;
 
     http.get(songURL, (stream) => {
+      //make sure the rawHeaders third item is the right one
       const title =
         stream?.rawHeaders[3] || 'attachment; filename="default.mp3"';
 
       const outStream = ffmpeg(stream)
         .toFormat("mp3")
         .on("error", (err) => {
-          console.log("An error occurred: " + err.message);
-        })
-        .on("progress", (progress) => {
-          // console.log("Processing: " + progress.targetSize + " KB converted");
-        })
-        .on("end", () => {
-          console.log("Processing finished !");
+          console.log("________An error occurred in ", title, ":", err['message']);
+          cancelHeaders =true;
+
+          res.status(500).send({
+            stack: err['stack'],
+            label: "ffmpeg error",
+            message: err["message"]
+          })
         })
         .pipe();
 
-      res.header("Content-Disposition", title); //probabyl share the raw headers
+        if(cancelHeaders) return;
+        res.header("Content-Disposition", title);
+        outStream.pipe(res);
 
-      outStream.pipe(res);
     });
-  } catch (e) {
-    console.log({ e });
+  } catch (error) {
+    console.log("____Error catch:", error['message']);
+
+    res.status(500).send({
+      stack: err['stack'],
+      message: error["message"],
+      label: "something in catch",
+    });
+
   }
 });
 
