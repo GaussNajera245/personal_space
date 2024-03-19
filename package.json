@@ -4,7 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node ./index.js 4201",
+    "postinstall": "sudo apt update && sudo apt install ffmpeg"
   },
   "keywords": [],
   "author": "",
@@ -18,6 +20,6 @@
     "got": "^13.0.0",
     "nodemon": "^2.0.22",
     "ytdl": "^1.4.1",
-    "ytdl-core": "^4.11.4"
+    "ytdl-core": "^4.11.5"
   }
 }

@@ -5,7 +5,7 @@ const server = express();
 const http = require("http");
 const ffmpeg = require("fluent-ffmpeg");
 
-const port = 4201;
+const port = process.argv[2]|| 4201;
 
 server.get("/", (req, res) => {
   res.send("Checking for connectivity...");
@@ -16,6 +16,22 @@ server.post("/music/receive-content", (req, res) => {
 
   res.send("Checking for connectivity...");
 });
+
+
+server.get("/download/video", async (req, res) => {
+  const URL = req.query.URL;
+  const extension = req.query.extension || 'mp4';
+
+  const { videoDetails } = await ytdl.getBasicInfo(URL);
+  const title = req?.query?.namefile || videoDetails?.title || req.query.namefile || 'video';
+
+console.log('-----> video hit', req.query, extension)
+
+  res.header("Content-Disposition", `attachment; filename="${title}.webm"`);
+  ytdl(URL).pipe(res);
+})
+
+
 
 server.get("/download/webm", async (req, res) => {
   const URL = req.query.URL;
@@ -30,6 +46,7 @@ server.get("/download/webm", async (req, res) => {
   let title =  videoDetails?.title || "default";
   title= title.replace("(Official Video)", "");
   title= title.replace("(Official Audio)", "");
+  title= title.replace("(Audio)", "");
   title = title.trim();
   
   res.header("Content-Disposition", `attachment; filename="${title}.mp3"`);
