@@ -13,7 +13,6 @@ server.get("/", (req, res) => {
 
 server.post("/music/receive-content", (req, res) => {
   //get the youtube URL and start downloading it, return a true flag to start downloading it later maybe?
-
   res.send("Checking for connectivity...");
 });
 
@@ -25,7 +24,7 @@ server.get("/download/video", async (req, res) => {
   const { videoDetails } = await ytdl.getBasicInfo(URL);
   const title = req?.query?.namefile || videoDetails?.title || req.query.namefile || 'video';
 
-console.log('-----> video hit', req.query, extension)
+  console.log('-----> video hit', req.query, extension)
 
   res.header("Content-Disposition", `attachment; filename="${title}.webm"`);
   ytdl(URL).pipe(res);
@@ -42,14 +41,11 @@ server.get("/download/webm", async (req, res) => {
   }
 
   const { videoDetails } = await ytdl.getBasicInfo(URL);
+  const title =  videoDetails?.title || "default";
 
-  let title =  videoDetails?.title || "default";
-  title= title.replace("(Official Video)", "");
-  title= title.replace("(Official Audio)", "");
-  title= title.replace("(Audio)", "");
-  title = title.trim();
+  console.log("title", title);
   
-  res.header("Content-Disposition", `attachment; filename="${title}.mp3"`);
+  res.header("Content-Disposition", `attachment; filename="${title}.webm"`);
 
   ytdl(URL, { filter: "audioonly" }).pipe(res);
 });
